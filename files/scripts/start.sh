@@ -103,50 +103,14 @@ fi
     printf "\n"
 } 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
 
-# Check if the config.example exists
-if [[ ! -e "/vdirsyncer/config.example" ]]
+# Check if the config exists
+if [[ ! -e "/vdirsyncer/config" ]]
 then
     # Copy config.example to vdirsyncer directory
     cp /files/examples/config.example /vdirsyncer/config.example
     # User info
     {
         echo "config.example has been copied to /vdirsyncer."
-        printf "\n"
-    } 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
-fi
-
-# Check if Autoupdate is enabled
-if [[ "${AUTOUPDATE}" == "true" ]]
-then
-    {
-        # User info
-        echo "#######################################"
-        printf "\n"
-        echo "Autoupdate of Vdirsyncer is enabled."
-        echo "Starting update..."
-        printf "\n"
-
-        # Vdirsyncer update
-        PIPX_HOME="${PIPX_HOME}" PIPX_BIN_DIR="${PIPX_BIN_DIR}" pipx upgrade --include-injected vdirsyncer
-
-        # Save exit code of update
-        UPDATE_SUCCESSFUL="${?}"
-
-        # Check if update was successful
-        if [[ "${UPDATE_SUCCESSFUL}" -eq 0 ]]
-        then
-            # User info
-            printf "\n"
-            echo "Vdirsyncer update was successful."
-        else
-            # User info
-            printf "\n"
-            echo "Vdirsyncer update FAILED!"
-        fi
-        
-        # End of update
-        printf "\n"
-        echo "#######################################"
         printf "\n"
     } 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
 fi
@@ -176,7 +140,7 @@ then
     # Write cronjob to file
     echo "${CRON_TIME} yes | /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} discover \
     && /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} metasync \
-    && /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} sync ${POST_SYNC_SNIPPET}" > "${CRON_FILE}"
+    && /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} sync ${POST_SYNC_SNIPPET}" > /tmp/vdirsyncer_cron
 
     # User info
     echo 'Autodiscover and Autosync are enabled.' 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
@@ -185,12 +149,12 @@ then
     if [[ -z "${LOG_LEVEL}" ]]
     then
         # Start the cronjob
-        /usr/bin/supercronic "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
 
     # If LOG_LEVEL environment variable is set
     else
         # Start the cronjob
-        /usr/bin/supercronic "${LOG_LEVEL}" "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic "${LOG_LEVEL}" /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
     fi
 
 # Append to crontab file if autosync is true
@@ -198,7 +162,7 @@ elif [[ "${AUTODISCOVER}" == "false" ]] && [[ "${AUTOSYNC}" == "true" ]]
 then
     # Write cronjob to file
     echo "${CRON_TIME} /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} metasync \
-    && /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} sync ${POST_SYNC_SNIPPET}" > "${CRON_FILE}"
+    && /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} sync ${POST_SYNC_SNIPPET}" > /tmp/vdirsyncer_cron
 
     # User info
     echo 'Only Autosync is enabled.' 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
@@ -207,19 +171,19 @@ then
     if [[ -z "${LOG_LEVEL}" ]]
     then
         # Start the cronjob
-        /usr/bin/supercronic "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
 
     # If LOG_LEVEL environment variable is set
     else
         # Start the cronjob
-        /usr/bin/supercronic "${LOG_LEVEL}" "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic "${LOG_LEVEL}" /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
     fi
 
 # Append to crontab file if autodiscover is true
 elif [[ "${AUTODISCOVER}" == "true" ]] && [[ "${AUTOSYNC}" == "false" ]]
 then
     # Write cronjob to file
-    echo "${CRON_TIME} yes | /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} discover ${POST_SYNC_SNIPPET}" > "${CRON_FILE}"
+    echo "${CRON_TIME} yes | /usr/local/bin/vdirsyncer -c ${VDIRSYNCER_CONFIG} discover ${POST_SYNC_SNIPPET}" > /tmp/vdirsyncer_cron
 
     # User info
     echo 'Only Autodiscover is enabled.' 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
@@ -228,12 +192,12 @@ then
     if [[ -z "${LOG_LEVEL}" ]]
     then
         # Start the cronjob
-        /usr/bin/supercronic "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
 
     # If LOG_LEVEL environment variable is set
     else
         # Start the cronjob
-        /usr/bin/supercronic "${LOG_LEVEL}" "${CRON_FILE}" 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
+        /usr/bin/supercronic "${LOG_LEVEL}" /tmp/vdirsyncer_cron 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a "${LOG}"
     fi
 
 # Append nothing, if both options are disabled
