@@ -19,14 +19,10 @@ ENV VDIRSYNCER_CONFIG=/vdirsyncer/config \
         AUTODISCOVER=false \
         # Set Autosync
         AUTOSYNC=false \
-        # Set Autoupdate
-        AUTOUPDATE=false \
         # Set Cron Time
         CRON_TIME='*/15 * * * *' \
         # Set Timezone
         TZ=Europe/Vienna \
-        # Set cron file
-        CRON_FILE="/etc/crontabs/vdirsyncer" \
         # Set script path to run after sync complete
         POST_SYNC_SCRIPT_FILE= \
         # Set Pipx home
@@ -116,10 +112,8 @@ RUN PIPX_HOME="${PIPX_HOME}" PIPX_BIN_DIR="${PIPX_BIN_DIR}" pipx install "vdirsy
 #For Vdirsyncer 0.18.0 - Root install
 #RUN sed -i 's~urn:ietf:wg:oauth:2.0:oob~http://127.0.0.1:8088~g' /usr/lib/python3.10/site-packages/vdirsyncer/storage/google.py
 
-# Set up permissions & cron file
-RUN chmod -R +x /files/scripts \
-        && touch "${CRON_FILE}" \
-        && chmod 644 "${CRON_FILE}"
+# Set up permissions
+RUN chmod -R +x /files/scripts
 
 # Entrypoint
 ENTRYPOINT ["bash","/files/scripts/start.sh"]
