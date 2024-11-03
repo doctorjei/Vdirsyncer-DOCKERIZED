@@ -43,7 +43,9 @@ ENV VDIRSYNCER_CONFIG=/vdirsyncer/config \
         LOG_LEVEL=
 
 # Update and install packages
-RUN apk update \
+RUN echo "**** UID:GID is ${UID}:${GID} ****"
+RUN echo "**** UID:GID is ${UID}:${GID} ****" && \
+        apk update \
         && apk add --no-cache --upgrade apk-tools \
         && apk upgrade --no-cache --available \
         # Install Pip
