@@ -25,12 +25,6 @@ ENV VDIRSYNCER_CONFIG=/vdirsyncer/config \
         CRON_TIME='*/15 * * * *' \
         # Set Timezone
         TZ=Europe/Vienna \
-        # Set UID
-        UID="1000" \
-        # Set GID
-        GID="1000" \
-        # Set Vdirsyncer user
-        VDIRSYNCER_USER="vdirsyncer" \
         # Set cron file
         CRON_FILE="/etc/crontabs/vdirsyncer" \
         # Set script path to run after sync complete
@@ -74,30 +68,6 @@ RUN echo "**** UID:GID is ${UID}:${GID} ****" && \
         && apk add --no-cache supercronic \
         # Clear cache
         && rm -rf /var/cache/apk/*
-
-# Set up User
-    # Set up Group
-RUN addgroup -g "${GID}" "${VDIRSYNCER_USER}" \
-        # Set up User
-        && adduser \
-        -D \
-        # Add to Group
-        -G "${VDIRSYNCER_USER}" \
-        # Don't create home directory
-        #-H \
-        # Home directory
-        -h "/home/${VDIRSYNCER_USER}" \
-        # Set UID
-        -u "${UID}" \
-        # Set Username
-        "${VDIRSYNCER_USER}" \
-        # Remove root password
-        #&& passwd -d root \
-        # Set up Crontab file
-        && touch "${CRON_FILE}"
-
-# Full sudo access for vdirsyncer user
-# RUN echo "vdirsyncer ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/vdirsyncer
 
 # Set up Workdir
 WORKDIR /vdirsyncer
@@ -146,17 +116,10 @@ RUN PIPX_HOME="${PIPX_HOME}" PIPX_BIN_DIR="${PIPX_BIN_DIR}" pipx install "vdirsy
 #For Vdirsyncer 0.18.0 - Root install
 #RUN sed -i 's~urn:ietf:wg:oauth:2.0:oob~http://127.0.0.1:8088~g' /usr/lib/python3.10/site-packages/vdirsyncer/storage/google.py
 
-# Change Permissions
+# Set up permissions & cron file
 RUN chmod -R +x /files/scripts \
-        && chown -R "${UID}":"${GID}" /files \
-        && chown -R "${UID}":"${GID}" /vdirsyncer \
-        && chmod -R 755 /vdirsyncer \
-        && chown "${UID}":"${GID}" "${CRON_FILE}" \
-        && chmod 644 "${CRON_FILE}" \
-        && chown -R "${VDIRSYNCER_USER}":"${VDIRSYNCER_USER}" "${PIPX_HOME}"
-
-# Switch User
-USER "${VDIRSYNCER_USER}"
+        && touch "${CRON_FILE}" \
+        && chmod 644 "${CRON_FILE}"
 
 # Entrypoint
 ENTRYPOINT ["bash","/files/scripts/start.sh"]
